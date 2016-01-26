@@ -14,28 +14,47 @@ import com.google.cloud.dataflow.sdk.io.UnboundedSource.CheckpointMark;
 import com.google.cloud.dataflow.sdk.io.UnboundedSource.UnboundedReader;
 
 import kafka.KafkaConsumerObject;
+import utils.PropertiesStack;
 
 public class KafkaReader extends UnboundedReader<String> {
 
-	private KafkaConsumerObject consumer;
+	KafkaConsumerObject consumer;
 	private String currentData;
+	private String currentKey;
 
+	private void initKafkaConsumer() {
+		consumer = new KafkaConsumerObject();
+		TopicPartition partition0 = new TopicPartition(PropertiesStack.getKafkaTopic(), 0);
+		consumer.assign(Arrays.asList(partition0));
+	}
+	
 	@Override
 	public boolean advance() throws IOException {
+		if (consumer == null){
+			initKafkaConsumer();
+		}
 		currentData = "";
+		currentKey = "";
 		ConsumerRecords<String, String> records = consumer.poll(1000);
+		consumer.close();
+		consumer = null;
 		if (records != null && !records.isEmpty()) {
 			for (ConsumerRecord<String, String> record : records) {
-				currentData += " "+record.value();
+				System.out.println("record key = "+record.key() +" and value = "+record.value());
+				currentData += " " + record.value();
+				currentKey += " " + record.key();
 			}
+			return true;
+		}else{
+			System.out.println("NO MORE TO READ");
+			return false;
 		}
-		return true;
+		
 	}
 
 	@Override
 	public CheckpointMark getCheckpointMark() {
-		// TODO Auto-generated method stub
-		return null;
+		return new KafkaCheckpointMark();
 	}
 
 	@Override
@@ -46,14 +65,13 @@ public class KafkaReader extends UnboundedReader<String> {
 
 	@Override
 	public Instant getWatermark() {
-		return new Instant(new java.util.Date().getTime()+1000L);
+		return new Instant(new java.util.Date().getTime() + 1000L);
 	}
 
 	@Override
 	public boolean start() throws IOException {
-		currentData = null;
 		consumer = new KafkaConsumerObject();
-		TopicPartition partition0 = new TopicPartition("tweets", 0);
+		TopicPartition partition0 = new TopicPartition(PropertiesStack.getKafkaTopic(), 0);
 		consumer.assign(Arrays.asList(partition0));
 		consumer.seekToBeginning(partition0);
 		return advance();
@@ -61,10 +79,6 @@ public class KafkaReader extends UnboundedReader<String> {
 
 	@Override
 	public void close() throws IOException {
-		if (consumer != null) {
-			consumer.close();
-		}
-
 	}
 
 	@Override
@@ -73,8 +87,21 @@ public class KafkaReader extends UnboundedReader<String> {
 	}
 
 	@Override
+	public byte[] getCurrentRecordId() throws NoSuchElementException {
+		return currentKey.getBytes();
+	}
+
+	@Override
 	public Instant getCurrentTimestamp() throws NoSuchElementException {
 		return Instant.now();
+	}
+	
+	class KafkaCheckpointMark implements CheckpointMark{
+
+		public void finalizeCheckpoint() throws IOException {
+			// TODO Auto-generated method stub
+		}
+		
 	}
 
 }

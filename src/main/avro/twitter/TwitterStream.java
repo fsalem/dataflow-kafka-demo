@@ -70,7 +70,7 @@ public class TwitterStream {
 		KafkaProducerObject kafkaProducerInstance = new KafkaProducerObject();
 		int i=0;
 		while (!hosebirdClient.isDone()) {
-			if (i ==10)break;
+			if (i ==100)break;
 			i++;
 			msg = msgQueue.take();
 			startInd = msg.indexOf(",\"text\":\"");
@@ -79,7 +79,7 @@ public class TwitterStream {
 				continue;
 
 			tweet = msg.substring(startInd, endInd).substring(9);
-			kafkaProducerInstance.send(tweet,"tweets");
+			kafkaProducerInstance.send(tweet,PropertiesStack.getKafkaTopic());
 			System.out.println(tweet);
 			// profit();
 		}

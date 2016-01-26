@@ -20,9 +20,9 @@ public class KafkaConsumerObject extends KafkaConsumer<String, String> {
 		props.put("bootstrap.servers", PropertiesStack.getKafkaBootstrapServers());
 		props.put("zookeeper.connect", PropertiesStack.getZookeeperConnect());
 		props.put("group.id", PropertiesStack.getKafkaGroupId());
-		// props.put("enable.auto.commit", "true");
-		// props.put("auto.commit.interval.ms", "1000");
-		// props.put("session.timeout.ms", "30000");
+		props.put("enable.auto.commit", "true");
+		props.put("auto.commit.interval.ms", "1000");
+		props.put("session.timeout.ms", "30000");
 		props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		// props.put("partition.assignment.strategy", "range");
@@ -35,9 +35,9 @@ public class KafkaConsumerObject extends KafkaConsumer<String, String> {
 	public static void main(String[] args) throws Exception {
 		KafkaConsumerObject consumer = new KafkaConsumerObject();
 		List<String> topics = new ArrayList<String>();
-		topics.add("tweets");
+		topics.add(PropertiesStack.getKafkaTopic());
 		//consumer.subscribe(topics);
-		TopicPartition partition0 = new TopicPartition("tweets", 0);
+		TopicPartition partition0 = new TopicPartition(PropertiesStack.getKafkaTopic(), 0);
 		consumer.assign(Arrays.asList(partition0));
 		consumer.seekToBeginning(partition0);
 		System.out.println(consumer.assignment());
