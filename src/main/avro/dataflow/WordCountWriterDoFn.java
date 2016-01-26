@@ -1,9 +1,9 @@
 package dataflow;
 
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-
 import kafka.KafkaProducerObject;
 import utils.PropertiesStack;
+
+import com.google.cloud.dataflow.sdk.transforms.DoFn;
 
 public class WordCountWriterDoFn extends DoFn<String, Boolean> {
 
